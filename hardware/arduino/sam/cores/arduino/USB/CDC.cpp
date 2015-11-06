@@ -17,6 +17,7 @@
 #include "Arduino.h"
 #include "USBAPI.h"
 #include "Reset.h"
+#include "LineInfo.h"
 
 #ifdef CDC_ENABLED
 
@@ -37,14 +38,6 @@ struct ring_buffer
 
 ring_buffer cdc_rx_buffer = { { 0 }, 0, 0};
 
-typedef struct
-{
-	uint32_t	dwDTERate;
-	uint8_t		bCharFormat;
-	uint8_t 	bParityType;
-	uint8_t 	bDataBits;
-	uint8_t		lineState;
-} LineInfo;
 
 static volatile LineInfo _usbLineInfo = { 
     57600, // dWDTERate

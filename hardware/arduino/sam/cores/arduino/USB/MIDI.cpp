@@ -1,6 +1,7 @@
 #include "Arduino.h"
 #include "USBAPI.h"
 #include "Reset.h"
+#include "LineInfo.h"
 
 #ifdef MIDI_ENABLED
 
@@ -14,6 +15,18 @@ struct ring_bufferMIDI
 };
 
 ring_bufferMIDI midi_rx_buffer = {{0,0,0,0 }, 0, 0};
+
+
+
+static volatile LineInfo _midiLineInfo = { 
+    31250, // dWDTERate
+    0x00,  // bCharFormat
+    0x00,  // bParityType
+    0x08,  // bDataBits
+    0x00   // lineState
+};
+
+
 
 _Pragma("pack(1)")
 static const MIDIDescriptor _midiInterface =
@@ -44,6 +57,26 @@ int WEAK MIDI_GetInterface(uint8_t* interfaceNum)
 bool WEAK MIDI_Setup(Setup& setup)
 {
 	//Support requests here if needed. Typically these are optional
+	uint8_t r = setup.bRequest;
+	uint8_t requestType = setup.bmRequestType;
+
+
+	// if (REQUEST_HOSTTODEVICE_CLASS_INTERFACE == requestType)
+	// {
+		// needed???
+		// if (CDC_SET_LINE_CODING == r)
+		// {
+		// 	USBD_RecvControl((void*)&_midiLineInfo,7);
+		// 	return true;
+		// }
+
+		// make sure we track when it's connected, for write()
+		if (CDC_SET_CONTROL_LINE_STATE == r)
+		{
+			_midiLineInfo.lineState = setup.wValueL;
+			return true;
+		}
+	//}
 	return false;
 }
 
@@ -142,14 +175,22 @@ size_t MIDI_::write(const uint8_t *buffer, size_t size)
 	// open connection isn't broken cleanly (cable is yanked out, host dies
 	// or locks up, or host virtual serial port hangs)
 
-	int r = USBD_Send(MIDI_TX, buffer, size);
+	// first, check the TX buffer to see if there's any space left.
+	// this may fill up if there's no one listening on the other end.
+	// in that case, we don't want to block waiting for the buffer to empty 
+	// (which is what USBD_Send() does.)
+	// instead, we'll just drop the packets and hope the caller figures it out.
+	//if (USBD_SendSpace(MIDI_TX) > size) {
+	if (_midiLineInfo.lineState > 0) {
+		int r = USBD_Send(MIDI_TX, buffer, size);
 
-	if (r > 0)
-	{
-		return r;
-	} else
-	{
-		return 0;
+		if (r > 0)
+		{
+			return r;
+		} else
+		{
+			return 0;
+		}
 	}
 	return 0;
 }
