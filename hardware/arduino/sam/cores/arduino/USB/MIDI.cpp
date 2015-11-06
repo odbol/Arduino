@@ -82,7 +82,7 @@ void MIDI_::accept(void)
 		
 		//MIDI paacket has to be 4 bytes
 		if(c < 4)
-			return;
+			break; // make sure to release the guard!
 		buffer->midiEvent[buffer->head] = event;
 		buffer->head = i;
 
