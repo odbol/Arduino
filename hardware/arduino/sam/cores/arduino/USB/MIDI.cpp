@@ -180,8 +180,11 @@ size_t MIDI_::write(const uint8_t *buffer, size_t size)
 	// in that case, we don't want to block waiting for the buffer to empty 
 	// (which is what USBD_Send() does.)
 	// instead, we'll just drop the packets and hope the caller figures it out.
+	
+
+	// TODO: neither of these checks work:
 	//if (USBD_SendSpace(MIDI_TX) > size) {
-	if (_midiLineInfo.lineState > 0) {
+	//if (_midiLineInfo.lineState > 0) {
 		int r = USBD_Send(MIDI_TX, buffer, size);
 
 		if (r > 0)
@@ -191,7 +194,7 @@ size_t MIDI_::write(const uint8_t *buffer, size_t size)
 		{
 			return 0;
 		}
-	}
+	//}
 	return 0;
 }
 
