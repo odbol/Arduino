@@ -181,14 +181,15 @@ size_t MIDI_::write(const uint8_t *buffer, size_t size)
 	// (which is what USBD_Send() does.)
 	// instead, we'll just drop the packets and hope the caller figures it out.
 	
-
-	// TODO: neither of these checks work:
+	// none of these checks work:
 	//if (USBD_SendSpace(MIDI_TX) > size) {
 	//if (_midiLineInfo.lineState > 0) {
 	//if (USBD_Connected()) {
 	//if (SerialUSB.dtr()) {
 	//if (_midiLineInfo.lineState > 0) {
-	if (Is_udd_write_enabled(MIDI_TX) && !Is_udd_overflow(MIDI_TX) && Is_udd_memory_allocated(MIDI_TX) && !Is_udd_detached()) {
+	//
+	// BUT THIS ONE DOES:
+	if (Is_udd_write_enabled(MIDI_TX)) {
 		int r = USBD_Send(MIDI_TX, buffer, size);
 
 		if (r > 0)
