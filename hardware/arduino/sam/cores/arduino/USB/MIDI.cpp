@@ -185,6 +185,10 @@ size_t MIDI_::write(const uint8_t *buffer, size_t size)
 	// TODO: neither of these checks work:
 	//if (USBD_SendSpace(MIDI_TX) > size) {
 	//if (_midiLineInfo.lineState > 0) {
+	//if (USBD_Connected()) {
+	//if (SerialUSB.dtr()) {
+	//if (_midiLineInfo.lineState > 0) {
+	if (Is_udd_write_enabled(MIDI_TX) && !Is_udd_overflow(MIDI_TX) && Is_udd_memory_allocated(MIDI_TX) && !Is_udd_detached()) {
 		int r = USBD_Send(MIDI_TX, buffer, size);
 
 		if (r > 0)
@@ -194,7 +198,7 @@ size_t MIDI_::write(const uint8_t *buffer, size_t size)
 		{
 			return 0;
 		}
-	//}
+	}
 	return 0;
 }
 
