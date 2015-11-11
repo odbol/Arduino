@@ -175,20 +175,11 @@ size_t MIDI_::write(const uint8_t *buffer, size_t size)
 	// open connection isn't broken cleanly (cable is yanked out, host dies
 	// or locks up, or host virtual serial port hangs)
 
-	// first, check the TX buffer to see if there's any space left.
-	// this may fill up if there's no one listening on the other end.
-	// in that case, we don't want to block waiting for the buffer to empty 
-	// (which is what USBD_Send() does.)
+	// first, check the TX buffer to see if it's ready for writing.
+	// USB_Send() may block if there's no one listening on the other end.
+	// in that case, we don't want to block waiting for someone to connect,
+	// because that would freeze the whole sketch 
 	// instead, we'll just drop the packets and hope the caller figures it out.
-	
-	// none of these checks work:
-	//if (USBD_SendSpace(MIDI_TX) > size) {
-	//if (_midiLineInfo.lineState > 0) {
-	//if (USBD_Connected()) {
-	//if (SerialUSB.dtr()) {
-	//if (_midiLineInfo.lineState > 0) {
-	//
-	// BUT THIS ONE DOES:
 	if (Is_udd_write_enabled(MIDI_TX)) {
 		int r = USBD_Send(MIDI_TX, buffer, size);
 
